@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>海大租房避坑AI - AI租房问答</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body class="qa-body">
+    <div class="app-container">
+        <!-- 侧边栏 -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h2>🏠 海大租房避坑AI</h2>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="/" class="nav-item">首页</a>
+                <a href="/qa" class="nav-item active">AI租房问答</a>
+            </nav>
+            <div class="sidebar-footer">
+                <p>让租房更安心</p>
+            </div>
+        </aside>
+
+        <!-- 主内容区 -->
+        <main class="qa-main">
+            <!-- 顶部栏 -->
+            <header class="qa-header">
+                <h1>💬 AI租房问答</h1>
+                <p class="qa-subtitle">基于真实经验 + AI智能，帮你解答租房疑惑</p>
+            </header>
+
+            <!-- 对话区域 -->
+            <div class="chat-container" id="chatContainer">
+                <!-- 欢迎消息 -->
+                <div class="chat-message bot">
+                    <div class="message-avatar">🤖</div>
+                    <div class="message-bubble">
+                        <p>你好！我是海大租房避坑AI助手 👋</p>
+                        <p>我已经学习了大量租房知识和实地看房经验，可以帮你解答：</p>
+                        <ul>
+                            <li>怎么看房、选房、签合同</li>
+                            <li>押金、租金、中介费怎么处理</li>
+                            <li>遇到问题如何维权</li>
+                            <li>海大周边租房攻略</li>
+                        </ul>
+                        <p>直接在下面输入你的问题吧！</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 输入区域 -->
+            <div class="qa-input-area">
+                <div class="qa-input-wrapper">
+                    <input
+                        type="text"
+                        id="questionInput"
+                        placeholder="输入你的租房问题，例如：押金被房东扣了怎么办？"
+                        autocomplete="off"
+                    >
+                    <button id="sendBtn" class="send-btn">
+                        <span class="send-icon">➤</span>
+                    </button>
+                </div>
+                <div class="qa-hints">
+                    <span>试试问：</span>
+                    <button class="hint-btn" data-question="看房时要注意检查哪些地方？">看房注意事项</button>
+                    <button class="hint-btn" data-question="押金被房东克扣怎么办？">押金问题</button>
+                    <button class="hint-btn" data-question="签租房合同要注意哪些条款？">合同陷阱</button>
+                    <button class="hint-btn" data-question="海大附近哪些区域租房比较好？">周边推荐</button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>
