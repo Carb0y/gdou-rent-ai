@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>海大租房避坑AI</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --bg: #f5f3ff;
+            --sidebar-bg: #1e1b4b;
+            --sidebar-text: #c4b5fd;
+            --sidebar-active: #fff;
+            --card: #fff;
+            --text: #1e1b4b;
+            --text-secondary: #6b7280;
+            --primary: #7c3aed;
+            --primary-light: #ede9fe;
+            --user-bubble: linear-gradient(135deg, #7c3aed, #a78bfa);
+            --bot-bubble: #f8f7ff;
+            --border: #e5e7eb;
+            --shadow: 0 1px 3px rgba(0,0,0,0.08);
+            --radius: 12px;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+        }
+
+        .app-container { display: flex; min-height: 100vh; }
+
+        /* Sidebar */
+        .sidebar {
+            width: 220px;
+            background: var(--sidebar-bg);
+            color: var(--sidebar-text);
+            display: flex;
+            flex-direction: column;
+            padding: 24px 16px;
+            flex-shrink: 0;
+        }
+        .sidebar-header h2 { font-size: 16px; color: #fff; margin-bottom: 4px; }
+        .sidebar-header .badge {
+            display: inline-block;
+            font-size: 11px;
+            background: #7c3aed44;
+            color: #a78bfa;
+            padding: 2px 8px;
+            border-radius: 10px;
+            margin-top: 6px;
+        }
+        .sidebar-nav { margin-top: 32px; display: flex; flex-direction: column; gap: 4px; }
+        .sidebar-nav a {
+            color: var(--sidebar-text);
+            text-decoration: none;
+            padding: 10px 12px;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all .15s;
+        }
+        .sidebar-nav a:hover { background: #312e81; color: #ddd6fe; }
+        .sidebar-nav a.active { background: #7c3aed33; color: #fff; font-weight: 600; }
+        .sidebar-footer { margin-top: auto; font-size: 12px; opacity: 0.5; }
+
+        /* Main */
+        .qa-main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            max-width: 800px;
+            margin: 0 auto;
+            width: 100%;
+            padding: 0 24px;
+        }
+        .qa-header { padding: 32px 0 16px; text-align: center; }
+        .qa-header h1 { font-size: 24px; margin-bottom: 4px; }
+        .qa-subtitle { font-size: 14px; color: var(--text-secondary); }
+
+        /* Chat */
+        .chat-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px 0;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            scroll-behavior: smooth;
+        }
+        .chat-message { display: flex; gap: 10px; animation: fadeUp .3s ease; }
+        .chat-message.user { flex-direction: row-reverse; }
+        .message-avatar {
+            width: 36px; height: 36px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 18px; flex-shrink: 0;
+            background: var(--primary-light);
+        }
+        .chat-message.user .message-avatar { background: #7c3aed33; }
+        .message-bubble {
+            max-width: 75%;
+            padding: 12px 16px;
+            border-radius: var(--radius);
+            font-size: 14px;
+            line-height: 1.65;
+            box-shadow: var(--shadow);
+        }
+        .chat-message.bot .message-bubble { background: var(--bot-bubble); border: 1px solid var(--border); }
+        .chat-message.user .message-bubble { background: var(--user-bubble); color: #fff; }
+        .message-bubble ul { padding-left: 18px; margin: 6px 0; }
+        .message-bubble li { margin: 2px 0; }
+
+        /* Source display */
+        .message-sources {
+            margin-top: 8px;
+            padding: 8px 12px;
+            background: #f0fdf4;
+            border-radius: 8px;
+            font-size: 12px;
+            color: #166534;
+        }
+        .message-sources .source-title { font-weight: 600; margin-bottom: 4px; }
+        .message-sources .source-item { display: flex; gap: 8px; margin: 2px 0; }
+        .message-sources .source-sim { color: #6b7280; white-space: nowrap; }
+
+        /* Loading dots */
+        .typing-dots { display: flex; gap: 4px; padding: 4px 0; }
+        .typing-dots span {
+            width: 7px; height: 7px; border-radius: 50%;
+            background: #a78bfa;
+            animation: bounce 1.2s infinite;
+        }
+        .typing-dots span:nth-child(2) { animation-delay: .2s; }
+        .typing-dots span:nth-child(3) { animation-delay: .4s; }
+
+        /* Input */
+        .qa-input-area { padding: 16px 0 32px; }
+        .qa-input-wrapper {
+            display: flex; gap: 8px;
+            background: var(--card);
+            border-radius: var(--radius);
+            padding: 6px 6px 6px 16px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            border: 1px solid var(--border);
+        }
+        .qa-input-wrapper input {
+            flex: 1; border: none; outline: none;
+            font-size: 14px; background: transparent;
+            color: var(--text);
+        }
+        .qa-input-wrapper input::placeholder { color: #9ca3af; }
+        .send-btn {
+            width: 44px; height: 44px; border: none;
+            background: var(--primary); color: #fff;
+            border-radius: 10px; cursor: pointer;
+            font-size: 18px; display: flex; align-items: center; justify-content: center;
+            transition: all .15s;
+        }
+        .send-btn:hover { background: #6d28d9; }
+        .send-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .qa-hints { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; align-items: center; }
+        .qa-hints span { font-size: 12px; color: var(--text-secondary); }
+        .hint-btn {
+            font-size: 12px; padding: 5px 12px;
+            border: 1px solid var(--border); border-radius: 16px;
+            background: var(--card); color: var(--text-secondary);
+            cursor: pointer; transition: all .15s;
+        }
+        .hint-btn:hover { border-color: var(--primary); color: var(--primary); background: var(--primary-light); }
+
+        @keyframes fadeUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes bounce { 0%,60%,100% { transform: translateY(0); } 30% { transform: translateY(-6px); } }
+
+        /* Responsive */
+        @media (max-width: 640px) {
+            .sidebar { display: none; }
+            .qa-main { padding: 0 16px; }
+            .message-bubble { max-width: 88%; }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h2>🏠 海大租房避坑AI</h2>
+                <span class="badge">RAG · AI</span>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="#home" class="nav-item">🏠 首页</a>
+                <a href="#qa" class="nav-item active">💬 AI租房问答</a>
+            </nav>
+            <div class="sidebar-footer">
+                <p>让租房更安心</p>
+                <p style="margin-top:4px">Carb0y © 2026</p>
+            </div>
+        </aside>
+
+        <main class="qa-main">
+            <header class="qa-header">
+                <h1>💬 AI租房问答</h1>
+                <p class="qa-subtitle">基于 RAG（检索增强生成）+ DeepSeek，结合实地经验解答租房疑惑</p>
+            </header>
+
+            <div class="chat-container" id="chat">
+                <div class="chat-message bot">
+                    <div class="message-avatar">🤖</div>
+                    <div class="message-bubble">
+                        <p>你好！我是海大租房避坑AI助手 👋</p>
+                        <p>我已经学习了<strong>15条</strong>租房知识，涵盖：</p>
+                        <ul>
+                            <li>怎么看房、选房、签合同</li>
+                            <li>押金、租金、中介费怎么处理</li>
+                            <li>遇到问题如何维权</li>
+                            <li>海大周边租房攻略</li>
+                        </ul>
+                        <p>直接输入你的问题，我来帮你避坑！</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="qa-input-area">
+                <div class="qa-input-wrapper">
+                    <input type="text" id="questionInput"
+                           placeholder="输入你的租房问题，例如：押金被房东扣了怎么办？"
+                           autocomplete="off">
+                    <button id="sendBtn" class="send-btn">➤</button>
+                </div>
+                <div class="qa-hints">
+                    <span>试试问：</span>
+                    <button class="hint-btn" data-q="看房时要注意检查哪些地方？">看房注意</button>
+                    <button class="hint-btn" data-q="押金被房东克扣怎么办？">押金问题</button>
+                    <button class="hint-btn" data-q="签租房合同要注意哪些条款？">合同陷阱</button>
+                    <button class="hint-btn" data-q="海大附近哪些区域租房比较好？">周边推荐</button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+    // ========== 知识库 ==========
+    const KNOWLEDGE = [
+        {"id":1,"q":"租房时如何判断房东是否靠谱？","a":"判断房东是否靠谱有以下几个方法：1）要求查看房东的身份证和房产证原件，确认他就是房主；2）如果是二房东，一定要看他和原房东的租赁合同，确认他有转租权；3）观察房东的态度，如果催你赶紧签约、不愿意给你时间看合同，就要警惕；4）可以在签约前和邻居聊一聊，了解房东的口碑。"},
+        {"id":2,"q":"签租房合同要注意哪些条款？","a":"签合同时重点看以下几点：1）租金金额、支付方式（月付/季付）、支付日期必须明确；2）押金金额（一般是一个月租金）和退还条件要写清楚；3）水电燃气物业费由谁承担；4）房屋维修责任归属，大修是房东，小修一般租客；5）提前退租的违约金条款，通常是一个月租金；6）是否有其他隐藏费用如中介费、管理费。合同一定要逐条看清楚再签字。"},
+        {"id":3,"q":"押金被房东克扣怎么办？","a":"如果房东无故克扣押金：1）首先要求房东出具书面扣款明细和依据；2）根据合同条款核对扣款是否合理；3）正常使用造成的磨损不应由租客承担；4）如果协商不成，可以向当地住建委或12345市民热线投诉；5）保留好合同、转账记录、聊天记录等所有证据；6）必要时可以走法律途径，小额诉讼程序比较简单。入住时一定要拍照留证，退租时再次拍照对比。"},
+        {"id":4,"q":"看房时要注意检查哪些地方？","a":"看房必查清单：1）水压和热水器是否正常，打开所有水龙头测试；2）电路和插座是否好用，带个手机充电器逐个试；3）空调制冷制热是否正常；4）卫生间是否有异味、下水是否通畅；5）墙面是否有渗水、发霉的痕迹；6）门窗是否能正常开关和锁上；7）网络信号和手机信号如何；8）白天和晚上最好各看一次，了解噪音和采光情况；9）问清楚周边有没有施工计划。"},
+        {"id":5,"q":"海大附近哪些区域租房比较好？","a":"海大附近推荐几个区域：1）学校周边的小区步行可达，但价格偏高；2）附近城中村价格便宜但环境一般，要注意安全；3）公交3-5站范围内的老小区性价比最高，生活配套成熟；4）新建公寓小区设施好但价格贵；5）合租可以选择学校教师家属院，环境安静安全。具体选哪里要根据你的预算、通勤时间来权衡。建议避开临街的低楼层，噪音比较大。"},
+        {"id":6,"q":"租房预算应该怎么分配？","a":"租房预算建议这样分配：1）房租不应超过月收入的30%；2）押金一般等于1个月房租，需要一次性支付；3）中介费（如有）通常为半个月到一个月房租；4）第一个月通常还要预付1-3个月房租；5）搬家费用预留500-1000元；6）添置生活用品预算1000-2000元。所以第一次租房大概需要准备4-6个月的房租金额作为启动资金。"},
+        {"id":7,"q":"合租要注意什么？","a":"合租需要注意：1）尽量找认识的同学或朋友合租，陌生人合租风险较大；2）提前约定好公共区域的卫生打扫制度；3）水电费分摊方式要明确（按人头还是按房间）；4）作息时间最好相近，避免互相打扰；5）是否可以带朋友回来、是否可以养宠物要提前说好；6）如果有人中途退租，剩余房租如何处理要写在协议里；7）贵重物品自己保管好，公共区域不要放私人物品。"},
+        {"id":8,"q":"租房需要办理哪些手续？","a":"租房后需要办理：1）签订正规的房屋租赁合同（最好是住建委的标准版本）；2）到当地派出所办理暂住登记（部分城市需要办理居住证）；3）记录水电气表的初始读数，拍照留证；4）更换门锁或至少换锁芯，保障安全；5）办理宽带和有线电视；6）了解小区的物业电话和紧急联系方式；7）如果是学生，可以告知辅导员你的校外住址。"},
+        {"id":9,"q":"如何避免租房被骗？","a":"防骗要点：1）不要在看房前支付任何费用，包括'定金''看房费'等；2）网上看到的房源如果图片精美价格极低，大概率是虚假房源；3）拒绝'房东不在本地，你先打款我寄钥匙'的说辞；4）核实房源信息，同一个房子在多个平台对比确认；5）不要轻信口头承诺，一切以书面合同为准；6）拒绝任何形式的网贷分期付租平台，利率极高；7）中介费在签约成功后才支付，不要提前给。"},
+        {"id":10,"q":"退租时需要注意什么？","a":"退租流程要点：1）提前一个月（或按合同约定时间）通知房东；2）把房屋打扫干净，尽量恢复到入住时的状态；3）和房东一起做退房检查，当场确认物品完好；4）结清所有水电燃气费用，保留缴费凭证；5）核对押金退还金额和时间，要求房东出具书面确认；6）交还所有钥匙和门禁卡；7）如果有损坏需要维修，建议自己找人修好再退，比房东扣款便宜很多。"},
+        {"id":11,"q":"短租（一个月左右）怎么找房子？","a":"短租可以考虑：1）短租平台如自如寓、贝壳找房的短租频道；2）学校周边的民宿或公寓式酒店，月租有折扣；3）师兄师姐转租的房子，往往比较靠谱且价格优惠；4）学校论坛或微信群里的短租信息；5）注意短租合同要和长租合同一样认真对待，押金退还条件也要明确。短租一般不太容易找到特别便宜的房子，预算要适当提高。"},
+        {"id":12,"q":"房子漏水、电器坏了该谁修？","a":"维修责任划分：1）房屋主体结构、管道、墙面等自然损坏由房东负责维修；2）房东提供的电器（空调、热水器、冰箱等）自然损坏由房东维修或更换；3）租客使用不当造成的损坏由租客负责；4）灯泡、水龙头垫圈等易耗品通常由租客自行更换；5）维修前先拍照告知房东，不要擅自找人来修；6）如果房东拖延不修，可以自行维修后保留发票，从租金中扣除，但要提前告知房东。"},
+        {"id":13,"q":"什么是'押一付三'？租房付款方式有哪些？","a":"'押一付三'是指押金1个月房租，一次性付3个月房租。常见付款方式：1）押一付一：压力最小，但房东不太愿意接受；2）押一付三：最常见的方式；3）押一付六/押一付年：一次性付半年或全年，可以和房东谈价格折扣；4）月付：对学生来说最友好，但需要遇到好说话的房东。建议尽量争取押一付一或押一付三，不要一次性付太多，万一出问题风险太大。"},
+        {"id":14,"q":"租房要不要找中介？","a":"找中介的利弊：优点是可以快速匹配房源、手续比较规范、有纠纷时可以协调；缺点是要支付中介费（通常半个月到一个月房租）。如果找中介：1）选择正规大型中介公司（如链家、贝壳、我爱我家）；2）问清楚中介费是多少，什么时候支付；3）不要找路边小中介，容易遇到黑中介。如果自己找：可以通过学校论坛、校友群、直接联系小区物业等方式，省钱但需要花时间筛选。"},
+        {"id":15,"q":"楼层和朝向怎么选？","a":"楼层和朝向建议：1）南方地区选南北通透最好，朝南采光好不潮湿；2）避开顶楼，夏天热冬天冷，还可能漏水；3）一楼潮湿蚊虫多、安全性相对差，但价格便宜；4）电梯房的中间楼层最好，采光通风都适中；5）楼梯房建议选3-4楼，太高搬东西累；6）避开西晒的房间，下午非常热；7）如果预算有限，朝北的房间价格便宜，可以用除湿机解决潮湿问题。"}
+    ];
+
+    // ========== 模糊匹配 (JS版 difflib.SequenceMatcher) ==========
+    function similarity(a, b) {
+        if (a === b) return 1.0;
+        if (!a.length || !b.length) return 0.0;
+        // 用 bigram 匹配近似 difflib.SequenceMatcher.ratio()
+        const bigrams = s => {
+            const set = new Set();
+            for (let i = 0; i < s.length - 1; i++) set.add(s.substring(i, i + 2));
+            return set;
+        };
+        const ba = bigrams(a), bb = bigrams(b);
+        let intersect = 0;
+        for (const bg of ba) { if (bb.has(bg)) intersect++; }
+        const total = ba.size + bb.size;
+        return total === 0 ? 1.0 : (2.0 * intersect) / total;
+    }
+
+    function fuzzyMatch(query, topN = 3) {
+        return KNOWLEDGE
+            .map(item => ({ ratio: similarity(query, item.q), item }))
+            .sort((a, b) => b.ratio - a.ratio)
+            .slice(0, topN);
+    }
+
+    // ========== DeepSeek API ==========
+    const DS_API_KEY = 'sk-f6961e27e8554142bd459ff94f2e1b68';
+    const DS_API_URL = 'https://api.deepseek.com/v1/chat/completions';
+
+    async function callDeepSeek(query, matches) {
+        const contextText = matches.map((m, i) =>
+            `【参考知识${i + 1}】（相似度：${m.ratio.toFixed(2)}）\n问：${m.item.q}\n答：${m.item.a}`
+        ).join('\n\n');
+
+        const systemPrompt = [
+            '你是"海大租房避坑AI"，一个专门帮助大学生解决租房问题的智能助手。',
+            '你的知识来源于真实的租房经验和本地知识库。',
+            '',
+            '回答规则：',
+            '1. 基于下面提供的参考知识来回答用户问题',
+            '2. 回答要实用、接地气，像学长学姐在分享经验',
+            '3. 如果参考知识不够完整，可以适当补充通用租房常识',
+            '4. 回答控制在300字以内，重点突出',
+            '5. 结尾可以加一句温馨提示',
+            '',
+            `参考知识：\n${contextText}`
+        ].join('\n');
+
+        const resp = await fetch(DS_API_URL, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${DS_API_KEY}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                model: 'deepseek-chat',
+                messages: [
+                    { role: 'system', content: systemPrompt },
+                    { role: 'user', content: query }
+                ],
+                temperature: 0.7,
+                max_tokens: 600
+            })
+        });
+
+        if (!resp.ok) {
+            const err = await resp.json().catch(() => ({}));
+            throw new Error(err.error?.message || `HTTP ${resp.status}`);
+        }
+
+        const data = await resp.json();
+        return data.choices[0].message.content;
+    }
+
+    // ========== UI ==========
+    const chat = document.getElementById('chat');
+    const input = document.getElementById('questionInput');
+    const sendBtn = document.getElementById('sendBtn');
+    let isBusy = false;
+
+    function addMessage(role, html) {
+        const div = document.createElement('div');
+        div.className = `chat-message ${role}`;
+        div.innerHTML = `
+            <div class="message-avatar">${role === 'bot' ? '🤖' : '👤'}</div>
+            <div class="message-bubble">${html}</div>
+        `;
+        chat.appendChild(div);
+        chat.scrollTop = chat.scrollHeight;
+        return div;
+    }
+
+    function addSources(matches) {
+        const html = `
+            <div class="message-sources">
+                <div class="source-title">📚 匹配到的知识来源：</div>
+                ${matches.map(m => `
+                    <div class="source-item">
+                        <span>${m.item.q}</span>
+                        <span class="source-sim">${(m.ratio * 100).toFixed(0)}%</span>
+                    </div>
+                `).join('')}
+            </div>
+        `;
+        const div = document.createElement('div');
+        div.className = 'chat-message bot';
+        div.innerHTML = `<div class="message-avatar" style="visibility:hidden">🤖</div><div class="message-bubble">${html}</div>`;
+        chat.appendChild(div);
+        chat.scrollTop = chat.scrollHeight;
+    }
+
+    function setBusy(busy) {
+        isBusy = busy;
+        sendBtn.disabled = busy;
+        input.disabled = busy;
+    }
+
+    function addTyping() {
+        const div = document.createElement('div');
+        div.className = 'chat-message bot';
+        div.id = 'typing-indicator';
+        div.innerHTML = `
+            <div class="message-avatar">🤖</div>
+            <div class="message-bubble">
+                <div class="typing-dots"><span></span><span></span><span></span></div>
+            </div>
+        `;
+        chat.appendChild(div);
+        chat.scrollTop = chat.scrollHeight;
+    }
+
+    function removeTyping() {
+        const el = document.getElementById('typing-indicator');
+        if (el) el.remove();
+    }
+
+    async function ask(question) {
+        if (isBusy) return;
+        question = question.trim();
+        if (!question) return;
+
+        setBusy(true);
+        input.value = '';
+
+        // 显示用户消息
+        addMessage('user', `<p>${escapeHtml(question)}</p>`);
+
+        // 模糊匹配
+        const matches = fuzzyMatch(question, 3);
+
+        if (matches[0].ratio < 0.3) {
+            addMessage('bot', '<p>抱歉，这个问题我还没学到，建议你实地看房时问问房东。</p>');
+            setBusy(false);
+            return;
+        }
+
+        // 显示匹配来源
+        addSources(matches);
+
+        // 调用AI
+        addTyping();
+        try {
+            const answer = await callDeepSeek(question, matches);
+            removeTyping();
+            addMessage('bot', `<p>${formatAnswer(answer)}</p>`);
+        } catch (e) {
+            removeTyping();
+            addMessage('bot', `<p>抱歉，AI服务暂时不可用：${escapeHtml(e.message)}</p>`);
+        }
+
+        setBusy(false);
+    }
+
+    function escapeHtml(s) {
+        const d = document.createElement('div');
+        d.textContent = s;
+        return d.innerHTML;
+    }
+
+    function formatAnswer(text) {
+        return escapeHtml(text)
+            .replace(/\n\n/g, '</p><p>')
+            .replace(/\n/g, '<br>')
+            .replace(/^/, '<p>')
+            .replace(/$/, '</p>');
+    }
+
+    // 事件绑定
+    sendBtn.addEventListener('click', () => ask(input.value));
+    input.addEventListener('keydown', e => { if (e.key === 'Enter') ask(input.value); });
+    document.querySelectorAll('.hint-btn').forEach(btn => {
+        btn.addEventListener('click', () => ask(btn.dataset.q));
+    });
+    </script>
+</body>
+</html>
