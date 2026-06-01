@@ -282,7 +282,12 @@
 
     function fuzzyMatch(query, topN = 3) {
         return KNOWLEDGE
-            .map(item => ({ ratio: similarity(query, item.q), item }))
+            .map(item => {
+                // q 字段可能包含多个变体（用 ？/问号/？ 分隔），取最高匹配分
+                const variants = item.q.split(/[？?？]/).filter(v => v.trim());
+                const maxRatio = Math.max(...variants.map(v => similarity(query, v.trim())));
+                return { ratio: maxRatio, item };
+            })
             .sort((a, b) => b.ratio - a.ratio)
             .slice(0, topN);
     }

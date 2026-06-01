@@ -14,11 +14,21 @@ def load_knowledge():
 
 # ---- 模糊匹配 ----
 def fuzzy_match(query, knowledge, top_n=3):
-    """使用 difflib.SequenceMatcher 做模糊匹配，返回最相似的 top_n 个条目"""
+    """使用 difflib.SequenceMatcher 做模糊匹配，返回最相似的 top_n 个条目
+
+    question 字段支持多个变体（用中文/英文问号分隔），取最高匹配分
+    """
+    import re
     scored = []
     for item in knowledge:
-        ratio = difflib.SequenceMatcher(None, query, item['question']).ratio()
-        scored.append((ratio, item))
+        # 拆分变体，分别计算相似度，取最大值
+        variants = re.split(r'[？\?]', item['question'])
+        variants = [v.strip() for v in variants if v.strip()]
+        max_ratio = max(
+            (difflib.SequenceMatcher(None, query, v).ratio() for v in variants),
+            default=0.0
+        )
+        scored.append((max_ratio, item))
     scored.sort(key=lambda x: x[0], reverse=True)
     return scored[:top_n]
 
