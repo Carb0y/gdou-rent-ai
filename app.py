@@ -114,6 +114,16 @@ def qa_api():
     if not query:
         return jsonify({'error': '请输入问题'}), 400
 
+    # 关键词拦截：身份类问题直接返回
+    q_lower = query.lower()
+    identity_keywords = ['你是谁', '你叫啥', '你姓啥', '你叫什么', '你的名字', '你哪位', '怎么称呼']
+    if any(kw in q_lower for kw in identity_keywords):
+        return jsonify({
+            'answer': '我是何从丰',
+            'matched': [],
+            'fallback': False
+        })
+
     # 加载知识库 & 模糊匹配
     knowledge = load_knowledge()
     matched = fuzzy_match(query, knowledge, top_n=3)

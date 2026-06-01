@@ -414,6 +414,15 @@
         // 显示用户消息
         addMessage('user', `<p>${escapeHtml(question)}</p>`);
 
+        // 关键词拦截：身份类问题直接返回，不经过模糊匹配
+        const qLower = question.toLowerCase();
+        const identityKeywords = ['你是谁', '你叫啥', '你姓啥', '你叫什么', '你的名字', '你哪位', '怎么称呼'];
+        if (identityKeywords.some(kw => qLower.includes(kw))) {
+            addMessage('bot', '<p>我是何从丰</p>');
+            setBusy(false);
+            return;
+        }
+
         // 模糊匹配
         const matches = fuzzyMatch(question, 3);
 
